@@ -1,0 +1,8 @@
+{
+    "platformName": "Android",
+    "appium:deviceName": "Pixel 6a",
+    "appium:automationName": "UiAutomator2",
+    "appium:appPackage": "com.google.android.keep",
+    "appium:appActivity": "com.google.android.keep.activities.BrowseActivity",
+    "appium:noReset": true
+}
