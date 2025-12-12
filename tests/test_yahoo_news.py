@@ -1,10 +1,10 @@
 from appium import webdriver
-from appium.webdriver.common.appiumby import AppiumBy
 from appium.options.android import UiAutomator2Options
 from pathlib import Path
 import pytest
 import json
 import os
+from src.pages.yahoo_news.home import HomePage
 
 @pytest.fixture(scope='function')
 def capabilities(request) -> dict:
@@ -28,9 +28,16 @@ def driver(capabilities):
 
 @pytest.mark.parametrize("capabilities", ["yahoo_news"], indirect=True)
 def test_yahoo_news_get_bottom_tab(driver):
-    # Instantiate the tab and get the bottom navigation bar
-    elements = driver.find_elements(AppiumBy.XPATH, "//androidx.compose.ui.platform.ComposeView[@resource-id='com.yahoo.mobile.client.android.yahoo:id/bottomTabBar']//android.widget.TextView")
+    # ARRANGE
+    yahoo_news_page = HomePage(driver, os.environ.get('PLATFORM', 'android'))
+
+    # ACT
+    # Verify that the bottom nav elements are retrieved
+    bottom_nav_elements = yahoo_news_page.bottom_tab()
+
+    # ASSERT
+    # Verify that the bottom nav text matches the expected values
     expected_values = ['Home', 'Top stories', 'Notifications', 'Profile']
-    for idx, element in enumerate(elements):
+    for idx, element in enumerate(bottom_nav_elements):
         assert expected_values[idx] == element.text
     assert True
