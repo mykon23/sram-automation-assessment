@@ -1,0 +1,8 @@
+{
+    "platformName": "Android",
+    "appium:deviceName": "Pixel 6a",
+    "appium:automationName": "UiAutomator2",
+    "appium:appPackage": "com.yahoo.mobile.client.android.yahoo",
+    "appium:appActivity": "com.yahoo.doubleplay.stream.presentation.view.activity.MainNavigationActivity",
+    "appium:noReset": true
+}
