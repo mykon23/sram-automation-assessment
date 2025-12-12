@@ -7,32 +7,38 @@ import os
 from src.pages.notes.notes import NotesPage
 from src.pages.yahoo_news.home import HomePage
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope="function")
 def capabilities(request) -> dict:
     app_name = request.param
-    platform = os.environ.get('PLATFORM', 'android')
-    app_config = Path(__file__).parent.parent / 'config' / f'{platform}' / f'{app_name}.json'
+    platform = os.environ.get("PLATFORM", "android")
+    app_config = (
+        Path(__file__).parent.parent / "config" / f"{platform}" / f"{app_name}.json"
+    )
     if not os.path.exists(app_config):
-        Exception(f"The config for app {app_name} does not exist on platform {platform}")
-    with open(app_config, 'r') as f:
+        Exception(
+            f"The config for app {app_name} does not exist on platform {platform}"
+        )
+    with open(app_config, "r") as f:
         capabilities = json.load(f)
     yield capabilities
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def driver(capabilities):
-    driver = webdriver.Remote('http://localhost:4723',
-                          options=UiAutomator2Options().load_capabilities(capabilities)
-                          )
+    driver = webdriver.Remote(
+        "http://localhost:4723",
+        options=UiAutomator2Options().load_capabilities(capabilities),
+    )
     yield driver
-    driver.terminate_app(capabilities['appium:appPackage'])
+    driver.terminate_app(capabilities["appium:appPackage"])
     driver.quit()
 
 
 @pytest.mark.parametrize("capabilities", ["yahoo_news"], indirect=True)
 def test_yahoo_news_get_bottom_tab(driver):
     # ARRANGE
-    platform = os.environ.get('PLATFORM', 'android')
+    platform = os.environ.get("PLATFORM", "android")
     yahoo_news_page = HomePage(driver, platform)
 
     # ACT
@@ -41,12 +47,12 @@ def test_yahoo_news_get_bottom_tab(driver):
 
     # ASSERT
     # Verify that the bottom nav text matches the expected values
-    expected_values = ['Home', 'Top stories', 'Notifications', 'Profile']
+    expected_values = ["Home", "Top stories", "Notifications", "Profile"]
     for idx, element in enumerate(bottom_nav_elements):
         assert expected_values[idx] == element.text
-    
+
     # Construct the value to be added onto the notes
-    content = ','.join(element.text for element in bottom_nav_elements)
+    content = ",".join(element.text for element in bottom_nav_elements)
 
     # Start the Notes app for the platform
     try:
