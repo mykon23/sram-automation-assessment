@@ -53,6 +53,7 @@ def test_yahoo_news_get_bottom_tab(driver):
 
     # Construct the value to be added onto the notes
     content = ",".join(element.text for element in bottom_nav_elements)
+    written_content = None
 
     # Start the Notes app for the platform
     try:
@@ -64,10 +65,9 @@ def test_yahoo_news_get_bottom_tab(driver):
 
         # Capture the value and compare it to the content
         written_content = notes_page.notes_text_field().text
-        assert written_content == content
     except:
-        pass
+        print("Failed to interact with notes app.")
     finally:
         driver.terminate_app("com.google.android.keep")
 
-    assert True
+    assert written_content == content
