@@ -1,5 +1,5 @@
-Appium-Python-Client
+Appium-Python-Client==5.2.4
 black==22.12.0
-flake8
-pre-commit
-pytest
+flake8==7.3.0
+pre-commit==4.3.0
+pytest==8.4.2

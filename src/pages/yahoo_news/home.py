@@ -1,14 +1,15 @@
 from appium.webdriver.common.appiumby import AppiumBy
+from src.constants.enums import Platform
 from src.pages.base import BasePage
 
 
 class HomePage(BasePage):
-    def __init__(self, driver, platform: str):
+    def __init__(self, driver, platform):
         self.driver = driver
         self.platform = platform
 
     def bottom_tab(self):
-        if self.platform == "android":
+        if self.platform == Platform.ANDROID:
             return self.find_all(
                 (
                     AppiumBy.XPATH,
@@ -16,5 +17,5 @@ class HomePage(BasePage):
                 )
             )
 
-        if self.platform == "ios":
+        if self.platform == Platform.IOS:
             pass

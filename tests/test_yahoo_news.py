@@ -4,20 +4,31 @@ from pathlib import Path
 import pytest
 import json
 import os
+from src.constants.enums import Platform, DeviceProvider
 from src.pages.notes.notes import NotesPage
 from src.pages.yahoo_news.home import HomePage
 
+# Keep as global variables for the test.  These should be set in the conftest or config for production
+PLATFORM = Platform(os.environ.get("PLATFORM", Platform.ANDROID.value))
+PROVIDER = DeviceProvider(os.environ.get("PROVIDER", DeviceProvider.LOCAL.value))
+
 
 @pytest.fixture(scope="function")
-def capabilities(request) -> dict:
+def capabilities(request):
+    """
+    Fixture to load the capabilities for the app session.
+    Keeping within the test file.  Production code would live elsewhere such as conftest.py
+    """
     app_name = request.param
-    platform = os.environ.get("PLATFORM", "android")
     app_config = (
-        Path(__file__).parent.parent / "config" / f"{platform}" / f"{app_name}.json"
+        Path(__file__).parent.parent
+        / "config"
+        / f"{PLATFORM.value}"
+        / f"{app_name}.json"
     )
     if not os.path.exists(app_config):
         Exception(
-            f"The config for app {app_name} does not exist on platform {platform}"
+            f"The config for app {app_name} does not exist on platform {PLATFORM.value}"
         )
     with open(app_config, "r") as f:
         capabilities = json.load(f)
@@ -26,20 +37,42 @@ def capabilities(request) -> dict:
 
 @pytest.fixture(scope="function")
 def driver(capabilities):
+    """
+    Fixture to generate the driver to interact with the mobile applications.
+    Keeping the driver within the test for assessment purpose.
+    Production code involes placing the driver into a DriverFactory
+    """
+    options = None
+    # Construct options based on the platform
+    if PLATFORM == Platform.ANDROID:
+        options = UiAutomator2Options().load_capabilities(capabilities)
+    if PLATFORM == Platform.IOS:
+        Exception(f"Not implemented for platform {Platform.IOS.value}")
+
+    # Determine the host: default to local as cloud could vary e.g. Browserstack Saucelabs, etc.
+    host = None
+    if PROVIDER == DeviceProvider.LOCAL:
+        host = "http://localhost:4723"
+
     driver = webdriver.Remote(
-        "http://localhost:4723",
-        options=UiAutomator2Options().load_capabilities(capabilities),
+        host,
+        options=options,
     )
     yield driver
     driver.terminate_app(capabilities["appium:appPackage"])
     driver.quit()
 
 
+@pytest.fixture
+def notes_app():
+    if PLATFORM == Platform.ANDROID:
+        return "com.google.android.keep"
+
+
 @pytest.mark.parametrize("capabilities", ["yahoo_news"], indirect=True)
-def test_yahoo_news_get_bottom_tab(driver):
+def test_yahoo_news_get_bottom_tab(driver, notes_app):
     # ARRANGE
-    platform = os.environ.get("PLATFORM", "android")
-    yahoo_news_page = HomePage(driver, platform)
+    yahoo_news_page = HomePage(driver, PLATFORM)
 
     # ACT
     # Verify that the bottom nav elements are retrieved
@@ -57,17 +90,21 @@ def test_yahoo_news_get_bottom_tab(driver):
 
     # Start the Notes app for the platform
     try:
-        driver.activate_app("com.google.android.keep")
-        notes_page = NotesPage(driver, platform)
-        notes_page.note_options_button().click()
-        notes_page.start_note_button().click()
-        notes_page.notes_text_field().send_keys(content)
+        driver.activate_app(notes_app)
+        notes_page = NotesPage(driver, PLATFORM)
+        # Keep the android specific steps for when test has to support android + ios
+        if PLATFORM == PLATFORM.ANDROID:
+            notes_page.note_options_button().click()
+            notes_page.start_note_button().click()
+            notes_page.notes_text_field().send_keys(content)
 
         # Capture the value and compare it to the content
         written_content = notes_page.notes_text_field().text
+
+        # TODO: Add proper teardown to delete the notes artifact
     except:
         print("Failed to interact with notes app.")
     finally:
-        driver.terminate_app("com.google.android.keep")
+        driver.terminate_app(notes_app)
 
     assert written_content == content
