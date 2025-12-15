@@ -93,7 +93,7 @@ def test_yahoo_news_get_bottom_tab(driver, notes_app):
         driver.activate_app(notes_app)
         notes_page = NotesPage(driver, PLATFORM)
         # Keep the android specific steps for when test has to support android + ios
-        if PLATFORM == PLATFORM.ANDROID:
+        if PLATFORM == Platform.ANDROID:
             notes_page.note_options_button().click()
             notes_page.start_note_button().click()
             notes_page.notes_text_field().send_keys(content)
